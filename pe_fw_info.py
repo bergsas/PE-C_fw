@@ -1,9 +1,6 @@
 #!/usr/bin/python2
 
 #
-# Use scraper on poweredgec.com to get latest firmware for C6220-2, 
-# or whatever hw you're using.
-#
 # Hacked together by Erlend Bergsaas <erlend.bergsaas@met.no>
 #   in March 2014.
 #
@@ -11,11 +8,7 @@
 
 # Reads the following environment variables:
 #  PE_FW_JSON    - The file from/to which json is read/written.
-#  PE_FW_SCRAPER - Location of the scraper html site to be scraped.
-#  PE_FW_LATEST  - Where you want the 'latest' file to be placed.
-#  PE_FW_CACHE   - Target directory of downloaded ... stuff.
-#  PE_FW_HW      - What hardware we're after.
-
+#
 import re
 import os
 import json
