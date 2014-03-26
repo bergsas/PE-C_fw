@@ -114,13 +114,13 @@ def main():
     regopt = 0
   if opt.pattern:
     pattern = re.compile(opt.pattern, regopt)
-  else
+  else:
     pattern = False
 
   if opt.exclude:
     exclude = re.compile(opt.exclude, regopt)
-  else
-    exclude False
+  else:
+    exclude = False
     
 
   for section,files in parser.links.items():

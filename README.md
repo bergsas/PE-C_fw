@@ -1,6 +1,9 @@
-<<<<<<< HEAD
+===============
 PE-C fw scraper
 ===============
+
+Scrape the scraper! 
+-------------------
 
   `./pe_fw_scraper.py 
     -v 
@@ -8,9 +11,7 @@ PE-C fw scraper
     --json=fw_scraper.json  
     --latest-prefix=cache/ 
     --latest=LATEST`
-=======
-PE-C_fw
-=======
 
-Scrape the scraper! 
->>>>>>> e271cfdb4e91309ed21a52dcc265f25b1715e922
+Download some bin files:
+
+  ./pe_fw_scraper.py -v --json=fw_scraper.json --cache=cache --latest=cache/LATEST_BIN -i --pattern bin
