@@ -8,6 +8,7 @@
 #   in March 2014.
 #
 # There is no exception handling worth mentioning here, by the way. :)
+#
 
 # Reads the following environment variables:
 #  PE_FW_JSON    - The file from/to which json is read/written.
@@ -30,9 +31,11 @@ def main():
 
   pe_fw_scraper_url =  "http://www.poweredgec.com/latest_PE-C_fw.html"
 
+  # For backwards compatibility. :)
   parser = OptionParser()
   parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False)
   parser.add_option("-S", "--silent", dest="silent", action="store_true", default=False)
+  parser.add_option("-i", "--ignorecase", dest="ignorecase", action="store_true", default=False)
   parser.add_option("--json", dest="json", default=os.getenv("PE_FW_JSON", None))
   parser.add_option("--url", dest="url", default=os.getenv("PE_FW_SCRAPER", pe_fw_scraper_url))
   parser.add_option("--latest", dest="latest", default=os.getenv("PE_FW_LATEST", None))
@@ -43,18 +46,10 @@ def main():
   parser.add_option("--no-header-info", dest="header_info", action="store_false", default=True)
   parser.add_option("--no-save-json", dest="save_json", action="store_false", default=True)
   parser.add_option("--retry-unknown-size", dest="retry_unknown_size", action="store_true", default=False)
-
-#  parser 
+  parser.add_option("--pattern", dest="pattern", default=None)
+  parser.add_option("--exclude", dest="exclude", default=None)
 
   (opt, args) = parser.parse_args()
-
-#  pe_fw_scraper, pw_fw_json, pw_fw_latest, pw_fw_cache
-
-#  pe_fw_scraper = os.getenv("PE_FW_SCRAPER", pe_fw_scraper_url)
-#  pe_fw_json = os.getenv("PE_FW_JSON", None)
-#  pe_fw_update_latest = os.getenv("PE_FW_LATEST", None) 
-#  pe_fw_cache = os.getenv("PE_FW_CACHE", None)
-#  pe_fw_s = os.getenv("PW_FW_CLASS", "C6220-2")
 
 
 # http://stackoverflow.com/questions/22676/how-do-i-download-a-file-over-http-using-python
@@ -111,9 +106,33 @@ def main():
   # Get a list of 'latest' entries.
   latest = []
   needs_download = []
+
+  # compile pattern and exclude
+  if opt.ignorecase:
+    regopt = re.IGNORECASE
+  else:
+    regopt = 0
+  if opt.pattern:
+    pattern = re.compile(opt.pattern, regopt)
+  else
+    pattern = False
+
+  if opt.exclude:
+    exclude = re.compile(opt.exclude, regopt)
+  else
+    exclude False
+    
+
   for section,files in parser.links.items():
     for filename,details in files.items():
-      
+      # If 'pattern' doesn't match continue
+      if pattern and not pattern.search(filename):
+        continue
+
+      # If 'exclude' matches, continue
+      if exclude and exclude.search(filename):
+        continue
+
       # If 'latest', add to latest list, to be written to file.
       if details['Latest?']['text'] == 'latest':
         latest.append(filename)

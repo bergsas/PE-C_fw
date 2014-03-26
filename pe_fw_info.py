@@ -117,5 +117,6 @@ else:
             text = value
             href = None
           print("     %-*s %s" %(maxlen, key, text))
+
           if href:
             print("     %-*s %s" %(maxlen, "", href))
