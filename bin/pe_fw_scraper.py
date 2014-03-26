@@ -17,6 +17,8 @@
 #  PE_FW_CACHE   - Target directory of downloaded ... stuff.
 #  PE_FW_HW      - What hardware we're after.
 
+___version___ = '0.0.1'
+
 import urllib2 # Deprecated in python3
 import sgmllib # Deprecated in python3
 import re
@@ -32,23 +34,43 @@ def main():
   pe_fw_scraper_url =  "http://www.poweredgec.com/latest_PE-C_fw.html"
 
   # For backwards compatibility. :)
-  parser = OptionParser()
+  parser = OptionParser(description="Scrape the scraper!", 
+    epilog="See also: %s" %(pe_fw_scraper_url),
+    version="%%prog %s"%(___version___))
   parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False)
   parser.add_option("-S", "--silent", dest="silent", action="store_true", default=False)
-  parser.add_option("-i", "--ignorecase", dest="ignorecase", action="store_true", default=False)
-  parser.add_option("--json", dest="json", default=os.getenv("PE_FW_JSON", None))
-  parser.add_option("--url", dest="url", default=os.getenv("PE_FW_SCRAPER", pe_fw_scraper_url))
-  parser.add_option("--latest", dest="latest", default=os.getenv("PE_FW_LATEST", None))
-  parser.add_option("--latest-prefix", dest="latest_prefix", default="")
-  parser.add_option("--cache", dest="cache", default=os.getenv("PE_FW_CACHE", None))
-  parser.add_option("--hw", dest="hw", default=os.getenv("PW_FW_HW", "C6220-2"))
-  parser.add_option("-D", "--dump", dest="dump", action="append", default=[])
+  parser.add_option("-J", "--json", dest="json", 
+    default=os.getenv("PE_FW_JSON", None),
+    help="JSON File (Env: PE_FW_JSON)")
+  parser.add_option("-U", "--url", dest="url", 
+    default=os.getenv("PE_FW_SCRAPER", pe_fw_scraper_url),
+    help="Scraper URL (Env: PE_FW_SCRAPER). May be a local file.")
+  parser.add_option("-L", "--latest", dest="latest", 
+    default=os.getenv("PE_FW_LATEST", None),
+    help="Update file LATEST with latest firmwares (Env: PE_FW_LATEST)", 
+    metavar="LATEST")
+  parser.add_option("-P", "--latest-prefix", dest="latest_prefix", 
+    default=os.getenv("PE_FW_LATEST_PREFIX", ""),
+    help="Prefix lines of LATEST file with PREFIX (Env: PE_FW_LATEST_PREFIX)", 
+    metavar="PREFIX")
+  parser.add_option("-C", "--cache", dest="cache", 
+    default=os.getenv("PE_FW_CACHE", None), help="Target directory for downloads")
+  parser.add_option("-H", "--hw", dest="hw", default=os.getenv("PW_FW_HW", "C6220-2"),
+    help="Hardware class to fetch firmwares for")
+  
+  parser.add_option("-F", "--pattern", dest="pattern", default=None, 
+    help="Filename pattern")
+  parser.add_option("-X", "--exclude", dest="exclude", default=None, 
+    help="Exclude filenames matching")
+  parser.add_option("-i", "--ignorecase", dest="ignorecase", action="store_true", 
+    default=False, help="Ignore case when matching regexes")
+  
   parser.add_option("--no-header-info", dest="header_info", action="store_false", default=True)
   parser.add_option("--no-save-json", dest="save_json", action="store_false", default=True)
   parser.add_option("--retry-unknown-size", dest="retry_unknown_size", action="store_true", default=False)
-  parser.add_option("--pattern", dest="pattern", default=None)
-  parser.add_option("--exclude", dest="exclude", default=None)
-
+  parser.add_option("--no-download", dest="download", action="store_false", default=True)
+  
+  parser.add_option("-D", "--dump", dest="dump", action="append", default=[])
   (opt, args) = parser.parse_args()
 
 
@@ -153,7 +175,7 @@ def main():
               size = 0 # Assume ok on ValueError. :)
 
 
-  if needs_download:
+  if opt.download and needs_download:
     if opt.verbose:
       msg("Will try and download %d files to cache %s" %(len(needs_download), opt.cache))
     for this in needs_download:
