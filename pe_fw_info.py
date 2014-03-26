@@ -16,12 +16,9 @@
 #  PE_FW_CACHE   - Target directory of downloaded ... stuff.
 #  PE_FW_HW      - What hardware we're after.
 
-import urllib2 # Deprecated in python3
-import sgmllib # Deprecated in python3
 import re
 import os
 import json
-import subprocess
 from optparse import OptionParser
 
 def msg(first,*x):
@@ -32,7 +29,7 @@ def msg(first,*x):
 
 parser = OptionParser()
 parser.add_option("--json", dest="json", default=os.getenv("PE_FW_JSON", None))
-
+parser.add_option("-i", "--ignore-case", dest="ignorecase", action="store_true", default=False)
 #  parser 
 
 (opt, args) = parser.parse_args()
@@ -44,14 +41,18 @@ with open(opt.json) as json_file:
   data = json.load(json_file)
   
 
-rearranged = {}
-
+first = True
 if len(args) == 0:
 
   order = ["Rel Date", "Filename", "Importance", "Ver", "Latest?", "DUP?", "Description"]
   for section, files in data.items():
     maxlen={}
     # Make nice columns. :)
+    if first:
+      first = False
+    else:
+      print ""
+
     msg("Type: %s" %(section))
     for filename, details in files.items():
       for name, data in details.items():
@@ -80,4 +81,41 @@ if len(args) == 0:
       print "\t".join(["%-*s"]*7) % tuple(fmt)
 
     print ""
+else:
+  for argname in args:
+    if opt.ignorecase:
+      reopt = re.IGNORECASE
+    else:
+      reopt = 0
     
+    argsearch = re.compile(r"%s" %(argname), reopt)
+
+    for section, files in data.items():
+      for filename, details in files.items():
+        if not bool(argsearch.search(filename)):
+          continue
+
+        if first:
+          first = False
+        else:
+          print ""
+
+        msg("%s: %s" %(section, filename))
+        maxlen = 0
+        for key, value in details.items():
+          keylen = len(key)
+          if maxlen < keylen:
+            maxlen = keylen
+        for key, value in details.items():
+          if isinstance(value, dict):
+            text = value['text']
+            if 'href' in value:
+              href = value['href']
+            else:
+              href = None
+          else:
+            text = value
+            href = None
+          print("     %-*s %s" %(maxlen, key, text))
+          if href:
+            print("     %-*s %s" %(maxlen, "", href))
