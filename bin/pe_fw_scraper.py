@@ -76,16 +76,21 @@ def main():
 
 # http://stackoverflow.com/questions/22676/how-do-i-download-a-file-over-http-using-python
   # Download ''latest'' scraper result
-  if bool(re.match(r".*://.*", opt.url)):
-    if opt.verbose:
-      msg("Extracting data from URL, using urllib: %s" %(opt.url))
-    response = urllib2.urlopen(opt.url) 
-  else:  
-    if opt.verbose:
-      msg("Extracting data from local file: %s" %(opt.url))
-    response = open(opt.url, 'r')
-
-  html = response.read()
+  
+  try:
+    if bool(re.match(r".*://.*", opt.url)):
+      if opt.verbose:
+        msg("Extracting data from URL, using urllib: %s" %(opt.url))
+      response = urllib2.urlopen(opt.url) 
+    else:  
+      if opt.verbose:
+        msg("Extracting data from local file: %s" %(opt.url))
+      response = open(opt.url, 'r')
+    
+    html = response.read()
+  except KeyboardInterrupt:
+    msg("Well... Bye bye: Interrupted: getting data from", opt.url)
+    exit(1)
 
   parser = ExtractLinks({'header': r"^%s" %(opt.hw)})
 
