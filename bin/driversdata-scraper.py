@@ -16,6 +16,7 @@ def main():
   )
   optparse.add_option("-s", "--silent", action="store_true", default=False)
   optparse.add_option("-v", "--verbose", action="store_true", default=False)
+  optparse.add_option("-A", "--auto", default=None)
   optparse.add_option("-J", "--json", default=None)
   optparse.add_option("-U", "--url", default=None)
   optparse.add_option("-C", "--cache", default=None)
@@ -25,6 +26,7 @@ def main():
   optparse.add_option("-M", "--match", default="FileName")
   optparse.add_option("-F", "--pattern", default=None)
   optparse.add_option("-X", "--exclude", default=None)
+  optparse.add_option("-o", "--option", action="append", default=[])
 
   optparse.add_option("-i", "--ignorecase", action="store_true", default=False)
   optparse.add_option("-D", dest="dump", action="append", default=[])
@@ -33,13 +35,27 @@ def main():
   # Fix the dump list. 
   known_dumpers = ('driversdata', 'groups', 'driverdetails', 'filedetails')
 
+  # Allow for all kinds of options from command line. Hurrah!
+  xopt = {} 
+  for o in opt.option:
+    o = o.split('=',1)
+    if len(o) == 2:
+      if o[0] in xopt and isinstance(list, xopt[o[0]]):
+        xopt[o[0]] += [o[1]]
+      else:
+        xopt[o[0]] = o[1]
+      continue
+
+    if o.startswith('!'):
+      xopt[o[1:]] = False
+    else:
+      xopt[o] = True
+
   for i,n in enumerate(opt.dump):
     opt.dump[i] = n.lower()
     if not opt.dump[i] in known_dumpers:
       msg("Unknown dumpers: %s"%(opt.dump[i]), "Known dumpers: %s"%(" ".join(known_dumpers)))
       exit(1)
-
-
   # Ignore case in regular expressions
   regex_opt = 0
   if opt.ignorecase:
@@ -65,22 +81,33 @@ def main():
   else:
     expression = None
 
-  if not opt.url:
+  url = opt.url
+  
+  if opt.auto:
+    url = autourl(opt.auto)
+
+  if not url:
     msg ("No url/file specified. I got nothing to do!")
     exit(1)
-
+  
   # Open file/url:
   parser = downloads_driversdata() 
   
   # If opt.url matches ://, open as URL
-  if bool(re.search(r"://", opt.url)):
-    urlopen = urllib2.urlopen(opt.url)
+  if bool(re.search(r"://", url)):
+    urlopen = urllib2.urlopen(url)
 
   # Else: Open as file.
   else:
-    urlopen = open(opt.url, 'r')
+    urlopen = open(url, 'r')
 
-  parser.feed(urlopen.read())
+  html = urlopen.read()
+  
+  if 'savehtml' in xopt:
+    with open(xopt['savehtml'], 'w') as htmlfile:
+      htmlfile.write(html)
+  
+  parser.feed(html)
 
   # Driversdata is stored here:
   driversdata = parser.driversdata
@@ -250,6 +277,14 @@ def regroup_driversdata(driversdata):
     
   # Return from function
   return groups 
+
+# autourl. Well. Generate autourl.
+def autourl(stuff):
+# This *may* work:
+  by_tag = "http://www.dell.com/support/home/us/en/04/product-support/servicetag/%s/drivers"
+  
+  if not bool(re.search(r"=", stuff)):
+    return by_tag %(stuff)
 
 # Create a simple expression using a list of strings
 #   Hack hack hack!
