@@ -131,6 +131,7 @@ def main():
   # Go trhough files and do stuff
   for group, drivers in groups.items():
     for driverid, driverdetails in drivers.items():
+      driverdetails['group'] = group
       if 'driverdetails' in opt.dump:
         msg ("driverdetails for %s" %(driverid))
         print json.dumps(driverdetails, indent=2)
@@ -139,7 +140,13 @@ def main():
         # filedetails['FileSize']
         # If pattern is specified and file doens't match, 
         #   move on
+       
+        for key in driverdetails.keys():
+          if key == 'files':
+            continue
+          filedetails[key] = driverdetails[key]
         
+
         try:
           if pattern and not pattern.search(filedetails[opt.match]):
             continue
