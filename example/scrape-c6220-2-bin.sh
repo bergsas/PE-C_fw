@@ -4,7 +4,20 @@
 curl="curl"
 find=find
 
-[ -z "$DRIVERSDATA" ] && DRIVERSDATA=bin/driversdata-scraper.py
+if [ -z "$DRIVERSDATA" ]
+then
+  DRIVERSDATA=driversdata-scraper.py
+  if [ -z "`which "$DRIVERSDATA"`" ]
+  then
+    for p in bin ../bin
+    do
+      if [ -e "$p/$DRIVERSDATA" ]
+      then
+        DRIVERSDATA="$p/$DRIVERSDATA"
+      fi
+    done
+  fi
+fi
 [ -z "$DRIVERSDATA_CACHE" ] &&  DRIVERSDATA_CACHE="/srv/ftp/fw/c6220-2"
 [ -z "$DRIVERSDATA_LATEST" ] && DRIVERSDATA_LATEST="$DRIVERSDATA_CACHE/latest_bin.txt"
 [ -z "$DRIVERSDATA_LATEST_PREFIX" ] && DRIVERSDATA_LATEST_PREFIX=""
