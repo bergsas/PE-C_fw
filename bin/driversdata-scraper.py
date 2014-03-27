@@ -31,8 +31,14 @@ def main():
   (opt, args) = optparse.parse_args()
 
   # Fix the dump list. 
+  known_dumpers = ('driversdata', 'groups', 'driverdetails', 'filedetails')
+
   for i,n in enumerate(opt.dump):
     opt.dump[i] = n.lower()
+    if not opt.dump[i] in known_dumpers:
+      msg("Unknown dumpers: %s"%(opt.dump[i]), "Known dumpers: %s"%(" ".join(known_dumpers)))
+      exit(1)
+
 
   # Ignore case in regular expressions
   regex_opt = 0
@@ -54,18 +60,21 @@ def main():
   if args:
     expression = makeexpression(args, regex_opt)
     if not expression:
-      print "Failed to compile expression from: %s" %(" ".join(args))
+      msg ("Failed to compile expression from: %s" %(" ".join(args)))
       exit(1)
-
   else:
     expression = None
+
+  if not opt.url:
+    msg ("No url/file specified. I got nothing to do!")
+    exit(1)
 
   # Open file/url:
   parser = downloads_driversdata() 
   
   # If opt.url matches ://, open as URL
   if bool(re.search(r"://", opt.url)):
-    urlopen = urllib2.open(opt.url)
+    urlopen = urllib2.urlopen(opt.url)
 
   # Else: Open as file.
   else:
@@ -129,15 +138,19 @@ def main():
         # os.path.isfile(join):
  
         
+        filesize, filename, href = filedetails["FileSize"], filedetails["FileName"], filedetails["DellHttpFileLocation"]
+        
         if opt.cache:
-          filesize, filename, href = filedetails["FileSize"], filedetails["FileName"], filedetails["DellHttpFileLocation"]
           cachedfile = os.path.join(opt.cache, filename)
 
           if not os.path.isfile(cachedfile) or os.path.getsize(cachedfile) != int(filesize):
             download += [[cachedfile, filename, href]] 
 
-        if opt.latest:
+        if opt.latest and filename:
           latest += [filename]
+
+        if not opt.silent:
+          print "%s" %(href)
 
   # At this point we may have two jobs to do: make the 'latest' file
   #   and download some files.
@@ -148,9 +161,12 @@ def main():
         latest_file.write("%s%s\n" %(opt.latest_prefix, line))
 
   if opt.download and opt.cache:
-    for down in download:
-      down += [opt]
-      curl_download(*down)
+    try:
+      for down in download:
+        down += [opt]
+        curl_download(*down)
+    except KeyboardInterrupt:
+      exit(1)
 
 # Parse HTML that looks like http://www.dell.com/support/home/us/en/04/product-support/product/poweredge-c6220-2/drivers
 # Look for hidden input with id ''driversdata'': Its 'value' attribute seems to
@@ -195,8 +211,6 @@ def regroup_driversdata(driversdata):
       #   u'CReqs', u'Second', u'Year', u'IsOthVerExst', u'OthFileFrmts']
 
       this = {}
-
-      #print json.dumps(driver, indent=2)
 
       # Some interesting attributes (metadata, as it happens):
       for attr in ('DriverId', 'DriverName', 'Cat', 'TypeName', 'Imp', 
