@@ -51,25 +51,6 @@ def main():
   if opt.exclude:
     opt.exclude = re.compile(opt.exclude, xopt['reopt'])
 
-  # EmployList!
-  employlist = EmployList(opt, xopt)
- 
-
-  # Read URL/file
-  if not opt.url:
-    msg("No url specified. I've got nothing to do!")
-    cleanup(mess,opt,xopt)
-    sys.exit(1)
-
-  # Read url
-  try:
-    if not employlist.read_url(opt.url):
-      cleanup(mess, opt, xopt)
-      sys.exit(1)
-  except IOError, e:
-    msg(e)
-    cleanup(mess, opt, xopt)
-    sys.exit(1)
 
   # If no opt.workdir is specified, create a tmpdir.
   tmpdir = None
@@ -92,8 +73,28 @@ def main():
 
     if opt.verbose:
       msg("Use workdir: %s" %(opt.workdir))
-  
-  downloaded = employlist.fetch()
+ 
+  # EmployList!
+  employlist = EmployList(opt, xopt)
+ 
+
+  # Read URL/file
+  if not opt.url:
+    msg("No url specified. I've got nothing to do!")
+    cleanup(mess,opt,xopt)
+    sys.exit(1)
+
+  # Read url
+  try:
+    if not employlist.read_url(opt.url):
+      cleanup(mess, opt, xopt)
+      sys.exit(1)
+  except IOError, e:
+    msg(e)
+    cleanup(mess, opt, xopt)
+    sys.exit(1)
+
+    downloaded = employlist.fetch()
   employlist.employ()
 
 
