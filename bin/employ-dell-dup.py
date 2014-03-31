@@ -173,7 +173,7 @@ def del_download(details, opt, xopt):
 
 def download(details, opt, xopt, no, totnum):
   curl = 'curl'
-  curlopt = ['--show-error', '--location']
+  curlopt = ['--show-error', '--remote-time', '--location']
   if opt.silent:
     curlopt += ["--silent"]
   curlopt += ['--output', os.path.join(opt.workdir, details['filename']), details['url']]
