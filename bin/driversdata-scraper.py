@@ -345,7 +345,7 @@ def curl_download(outfile, filename,  href, opt):
   curl='curl'                                                                   
   curl_options = ['--location', '--remote-time']                                                 
   if opt.silent:                                                                
-    curl_options.append('--silent', '--show-error')                                             
+    curl_options += ['--silent', '--show-error']
   return subprocess.call([curl]+curl_options+["--output", outfile, href])       
 
 # msg                                        
